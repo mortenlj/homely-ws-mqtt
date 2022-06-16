@@ -8,6 +8,7 @@ WORKDIR /code
 ARG cross_version=0.2.1
 
 prepare:
+    DO github.com/earthly/lib+INSTALL_DIND
     RUN cargo install cross --version ${cross_version}
     COPY --dir src Cargo.lock Cargo.toml .
     SAVE IMAGE --cache-hint
