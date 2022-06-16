@@ -41,4 +41,4 @@ jobs:
           EARTHLY_PUSH: "${{ github.ref == 'refs/heads/main' }}"
         run: |
           ./earthlyw --version
-          ./earthlyw --verbose --allow-privileged --ci --output "--remote-cache=${cache_image}" +build "--version=${version}"
+          ./earthlyw --verbose --allow-privileged --ci --output "--remote-cache=${cache_image}" +deploy "--version=${version}"
