@@ -1,22 +1,35 @@
 #[macro_use]
 extern crate log;
 
+use std::borrow::Borrow;
 use std::cmp::min;
 use std::collections::HashMap;
+use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use async_ctrlc::CtrlC;
 use async_std::prelude::FutureExt;
+use async_std::task::sleep;
 use clap::Parser;
 use env_logger::Env;
 use serde::Deserialize;
+use serde_json::Value;
 use tide::Request;
 
 const AUTH_URL: &'static str = "https://sdk.iotiliti.cloud/homely/oauth/token";
+const LOCATIONS_URL: &'static str = "https://sdk.iotiliti.cloud/homely/locations";
+const HOME_URL: &'static str = "https://sdk.iotiliti.cloud/homely/home";
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Auth {
     access_token: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all="camelCase")]
+struct Location {
+    name: String,
+    location_id: String
 }
 
 /// Collect events from Homely API (REST and WebSockets) and send to MQTT
@@ -55,9 +68,9 @@ async fn main() -> Result<()> {
             .map_err(|e| anyhow!(e))
     };
 
-    let token = authenticate(args.homely_username, args.homely_password).await?;
-    debug!("{}", token.access_token);
-    app.race(setup_ctrlc_handler()).await?;
+    app.race(setup_ctrlc_handler())
+        .race(consume_events(args.homely_username, args.homely_password))
+        .await?;
 
     Ok(())
 }
@@ -67,6 +80,42 @@ async fn probe(mut _req: Request<()>) -> tide::Result {
     Ok(format!("I'm alive!").into())
 }
 
+
+async fn consume_events(username: String, password: String) -> Result<()> {
+    let auth = authenticate(username, password).await?;
+    dbg!(auth.borrow());
+    let locations = get_locations(auth.borrow()).await?;
+    dbg!(<Vec<Location> as Borrow<[Location]>>::borrow(&locations));
+
+    let state = get_state(auth.borrow(), &locations[0]).await?;
+    dbg!(state);
+
+    sleep(Duration::from_secs(20)).await;
+
+    Ok(())
+}
+
+async fn get_state(auth: &Auth, location: &Location) -> Result<Value> {
+    let client = reqwest::Client::new();
+    let state = client.get(format!("{}/{}", HOME_URL, location.location_id))
+        .bearer_auth(&auth.access_token)
+        .send()
+        .await?
+        .json::<Value>()
+        .await?;
+    Ok(state)
+}
+
+async fn get_locations(auth: &Auth) -> Result<Vec<Location>> {
+    let client = reqwest::Client::new();
+    let locations = client.get(LOCATIONS_URL)
+        .bearer_auth(&auth.access_token)
+        .send()
+        .await?
+        .json::<Vec<Location>>()
+        .await?;
+    Ok(locations)
+}
 
 /// Authenticate with the REST API and return token
 async fn authenticate(username: String, password: String) -> Result<Auth> {
