@@ -6,6 +6,7 @@ WORKDIR /code
 
 # Constants, do not override
 ARG cross_version=0.2.1
+ARG CARGO_INCREMENTAL=0
 
 prepare:
     DO github.com/earthly/lib+INSTALL_DIND
