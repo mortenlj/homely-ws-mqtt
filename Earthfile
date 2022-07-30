@@ -16,6 +16,9 @@ debugbuild:
     ARG main_image=ghcr.io/$EARTHLY_GIT_PROJECT_NAME
     SAVE IMAGE --push ${main_image}-debug:${version}
 
+debugdeploy:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +debugbuild
+
 prepare:
     DO github.com/earthly/lib+INSTALL_DIND
     RUN cargo install cross --version ${cross_version}
