@@ -8,6 +8,9 @@ on:
   - workflow_dispatch
   - push
 
+env:
+  cache_image: ghcr.io/${{ github.repository }}/debug-cache:cache
+
 jobs:
   set-version:
     name: Set variables
@@ -44,4 +47,4 @@ jobs:
       - name: Build and possibly push
         run: |
           ./earthlyw --version
-          ./earthlyw --push --verbose --allow-privileged --ci --output +debugdeploy "--version=${version}"
+          ./earthlyw --push --verbose --allow-privileged --ci --output "--remote-cache=${cache_image}" +debugdeploy "--version=${version}"
