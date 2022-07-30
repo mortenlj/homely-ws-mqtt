@@ -11,6 +11,7 @@ ARG CARGO_INCREMENTAL=0
 debugbuild:
     FROM ubuntu:latest
     RUN apt-get -y update && apt-get -y install httpie
+    ARG EARTHLY_GIT_PROJECT_NAME
     ARG main_image=ghcr.io/$EARTHLY_GIT_PROJECT_NAME
     SAVE IMAGE --push ${main_image}:debug
 
