@@ -12,8 +12,9 @@ debugbuild:
     FROM ubuntu:latest
     RUN apt-get -y update && apt-get -y install httpie
     ARG EARTHLY_GIT_PROJECT_NAME
+    ARG version=$EARTHLY_GIT_SHORT_HASH
     ARG main_image=ghcr.io/$EARTHLY_GIT_PROJECT_NAME
-    SAVE IMAGE --push ${main_image}-debug:debug
+    SAVE IMAGE --push ${main_image}-debug:${version}
 
 prepare:
     DO github.com/earthly/lib+INSTALL_DIND

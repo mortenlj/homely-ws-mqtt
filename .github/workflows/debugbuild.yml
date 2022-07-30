@@ -4,12 +4,29 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-on: workflow_dispatch
+on:
+  - workflow_dispatch
+  - push
 
 jobs:
+  set-version:
+    name: Set variables
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Set version"
+        id: constants
+        run: |
+          export version="$(date +%Y%m%d%H%M%S)-$(git describe --always --dirty --exclude '*')"
+          echo "::set-output name=version::${version}"
+    outputs:
+      version: "${{ steps.constants.outputs.version }}"
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: set-version
+    env:
+      version: "${{ needs.set-version.outputs.version }}"
     steps:
       - uses: actions/checkout@v3
       - name: Login to GitHub Packages Docker Registry
@@ -21,4 +38,4 @@ jobs:
       - name: Build and possibly push
         run: |
           ./earthlyw --version
-          ./earthlyw --push --verbose --allow-privileged --ci --output +debugbuild
+          ./earthlyw --push --verbose --allow-privileged --ci --output +debugbuild "--version=${version}"
