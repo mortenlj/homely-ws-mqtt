@@ -14,7 +14,7 @@ debugbuild:
     ARG EARTHLY_GIT_PROJECT_NAME
     ARG version=$EARTHLY_GIT_SHORT_HASH
     ARG main_image=ghcr.io/$EARTHLY_GIT_PROJECT_NAME
-    SAVE IMAGE --push ${main_image}-debug:${version}
+    SAVE IMAGE --push ${main_image}-debug:${version} ${main_image}-debug:latest
 
 debugdeploy:
     BUILD --platform=linux/amd64 --platform=linux/arm64 +debugbuild
