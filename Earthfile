@@ -8,17 +8,6 @@ WORKDIR /code
 ARG cross_version=0.2.1
 ARG CARGO_INCREMENTAL=0
 
-debugbuild:
-    FROM ubuntu:latest
-    RUN apt-get -y update && apt-get -y install httpie
-    ARG EARTHLY_GIT_PROJECT_NAME
-    ARG version=$EARTHLY_GIT_SHORT_HASH
-    ARG main_image=ghcr.io/$EARTHLY_GIT_PROJECT_NAME
-    SAVE IMAGE --push ${main_image}-debug:${version} ${main_image}-debug:latest
-
-debugdeploy:
-    BUILD --platform=linux/amd64 --platform=linux/arm64 +debugbuild
-
 prepare:
     DO github.com/earthly/lib+INSTALL_DIND
     RUN cargo install cross --version ${cross_version}
