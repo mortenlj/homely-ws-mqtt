@@ -96,6 +96,7 @@ async fn consume_events(username: String, password: String) -> Result<()> {
     }).await?
 }
 
+// XXX: Requires socket.io protocol v3 or v4 (engine.io v3)
 fn stream_events(auth: &Auth, location: &Location) -> Result<()> {
     let pair = Arc::new((Mutex::new(false), Condvar::new()));
     let pair2 = pair.clone();
@@ -179,7 +180,7 @@ async fn setup_ctrlc_handler() -> Result<()> {
 
 /// Configure logging taking verbosity into account
 fn init_logging(args: &Args) {
-    let log_levels = vec!["error", "warning", "info", "debug"];
+    let log_levels = vec!["error", "warning", "info", "debug", "trace"];
     let default_level = 2;
     let actual_level = min(default_level + args.verbose, log_levels.len());
     let env = Env::default()
